@@ -1,517 +1,280 @@
-<!-- markdownlint-disable MD041 -->
-<!-- markdownlint-disable-next-line MD033 -->
-<div align="center">
-  <!-- markdownlint-disable-next-line MD033 -->
-  <img src="src/views/assets/gowa.svg" alt="GoWA Logo" width="200" height="200">
+# Multi-Account WhatsApp Gateway Guide
 
-## Golang WhatsApp - Built with Go for efficient memory use
+## Overview
 
-</div>
+Proyek ini telah dimodifikasi untuk mendukung multiple WhatsApp accounts dengan webhook per account yang dapat dikonfigurasi secara terpisah.
 
-[![Patreon](https://img.shields.io/badge/Support%20on-Patreon-orange.svg)](https://www.patreon.com/c/aldinokemal)
-**If you're using this tools to generate income, consider supporting its development by becoming a Patreon member!**
-Your support helps ensure the library stays maintained and receives regular updates!
-___
+## Fitur Multi-Account
 
-![release version](https://img.shields.io/github/v/release/aldinokemal/go-whatsapp-web-multidevice)
-![Build Image](https://github.com/aldinokemal/go-whatsapp-web-multidevice/actions/workflows/build-docker-image.yaml/badge.svg)
-![Binary Release](https://github.com/aldinokemal/go-whatsapp-web-multidevice/actions/workflows/release.yml/badge.svg)
+### 1. **Account Management**
+- Buat, hapus, dan kelola multiple WhatsApp accounts
+- Setiap account memiliki ID unik
+- Status connection per account (connected, disconnected, logged_in)
+- Database terpisah untuk setiap account
 
-## Support for `ARM` & `AMD` Architecture along with `MCP` Support
+### 2. **Webhook Per Account**
+- Setiap account dapat memiliki webhook URL dan secret sendiri
+- Webhook dapat dikonfigurasi independen untuk setiap account
+- Backward compatibility dengan global webhook
 
-Download:
+### 3. **API Endpoints Baru**
 
-- [Release](https://github.com/aldinokemal/go-whatsapp-web-multidevice/releases/latest)
-- [Docker Hub](https://hub.docker.com/r/aldinokemal2104/go-whatsapp-web-multidevice/tags)
-- [GitHub Container Registry](https://github.com/aldinokemal/go-whatsapp-web-multidevice/pkgs/container/go-whatsapp-web-multidevice)
-
-## Support n8n package (n8n.io)
-
-- [n8n package](https://www.npmjs.com/package/@aldinokemal2104/n8n-nodes-gowa)
-- Go to Settings -> Community Nodes -> Input `@aldinokemal2104/n8n-nodes-gowa` -> Install
-
-## Breaking Changes
-
-- `v6`
-  - For REST mode, you need to run `<binary> rest` instead of `<binary>`
-    - for example: `./whatsapp rest` instead of ~~./whatsapp~~
-  - For MCP mode, you need to run `<binary> mcp`
-    - for example: `./whatsapp mcp`
-- `v7`
-  - Starting version 7.x we are using goreleaser to build the binary, so you can download the binary
-      from [release](https://github.com/aldinokemal/go-whatsapp-web-multidevice/releases/latest)
-
-## Feature
-
-- Send WhatsApp message via http API, [docs/openapi.yml](./docs/openapi.yaml) for more details
-- **MCP (Model Context Protocol) Server Support** - Integrate with AI agents and tools using standardized protocol
-- Mention someone
-  - `@phoneNumber`
-  - example: `Hello @628974812XXXX, @628974812XXXX`
-- Post Whatsapp Status
-- **Send Stickers** - Automatically converts images to WebP sticker format
-  - Supports JPG, JPEG, PNG, WebP, and GIF formats
-  - Automatic resizing to 512x512 pixels
-  - Preserves transparency for PNG images
-- Compress image before send
-- Compress video before send
-- Change OS name become your app (it's the device name when connect via mobile)
-  - `--os=Chrome` or `--os=MyApplication`
-- Basic Auth (able to add multi credentials)
-  - `--basic-auth=kemal:secret,toni:password,userName:secretPassword`, or you can simplify
-  - `-b=kemal:secret,toni:password,userName:secretPassword`
-- Subpath deployment support
-  - `--base-path="/gowa"` (allows deployment under a specific path like `/gowa/sub/path`)
-- Customizable port and debug mode
-  - `--port 8000`
-  - `--debug true`
-- Auto reply message
-  - `--autoreply="Don't reply this message"`
-- Auto mark read incoming messages
-  - `--auto-mark-read=true` (automatically marks incoming messages as read)
-- Webhook for received message
-  - `--webhook="http://yourwebhook.site/handler"`, or you can simplify
-  - `-w="http://yourwebhook.site/handler"`
-  - for more detail, see [Webhook Payload Documentation](./docs/webhook-payload.md)
-- Webhook Secret
-  Our webhook will be sent to you with an HMAC header and a sha256 default key `secret`.
-
-  You may modify this by using the option below:
-  - `--webhook-secret="secret"`
-- **Webhook Payload Documentation**
-  For detailed webhook payload schemas, security implementation, and integration examples,
-  see [Webhook Payload Documentation](./docs/webhook-payload.md)
-
-## Configuration
-
-You can configure the application using either command-line flags (shown above) or environment variables. Configuration
-can be set in three ways (in order of priority):
-
-1. Command-line flags (highest priority)
-2. Environment variables
-3. `.env` file (lowest priority)
-
-### Environment Variables
-
-You can configure the application using environment variables. Configuration can be set in three ways (in order of
-priority):
-
-1. Command-line flags (highest priority)
-2. Environment variables
-3. `.env` file (lowest priority)
-
-To use environment variables:
-
-1. Copy `.env.example` to `.env` in your project root (`cp src/.env.example src/.env`)
-2. Modify the values in `.env` according to your needs
-3. Or set the same variables as system environment variables
-
-#### Available Environment Variables
-
-| Variable                      | Description                                 | Default                                      | Example                                     |
-|-------------------------------|---------------------------------------------|----------------------------------------------|---------------------------------------------|
-| `APP_PORT`                    | Application port                            | `3000`                                       | `APP_PORT=8080`                             |
-| `APP_DEBUG`                   | Enable debug logging                        | `false`                                      | `APP_DEBUG=true`                            |
-| `APP_OS`                      | OS name (device name in WhatsApp)           | `Chrome`                                     | `APP_OS=MyApp`                              |
-| `APP_BASIC_AUTH`              | Basic authentication credentials            | -                                            | `APP_BASIC_AUTH=user1:pass1,user2:pass2`    |
-| `APP_BASE_PATH`               | Base path for subpath deployment            | -                                            | `APP_BASE_PATH=/gowa`                       |
-| `DB_URI`                      | Database connection URI                     | `file:storages/whatsapp.db?_foreign_keys=on` | `DB_URI=postgres://user:pass@host/db`       |
-| `WHATSAPP_AUTO_REPLY`         | Auto-reply message                          | -                                            | `WHATSAPP_AUTO_REPLY="Auto reply message"`  |
-| `WHATSAPP_AUTO_MARK_READ`     | Auto-mark incoming messages as read         | `false`                                      | `WHATSAPP_AUTO_MARK_READ=true`              |
-| `WHATSAPP_WEBHOOK`            | Webhook URL(s) for events (comma-separated) | -                                            | `WHATSAPP_WEBHOOK=https://webhook.site/xxx` |
-| `WHATSAPP_WEBHOOK_SECRET`     | Webhook secret for validation               | `secret`                                     | `WHATSAPP_WEBHOOK_SECRET=super-secret-key`  |
-| `WHATSAPP_ACCOUNT_VALIDATION` | Enable account validation                   | `true`                                       | `WHATSAPP_ACCOUNT_VALIDATION=false`         |
-| `WHATSAPP_CHAT_STORAGE`       | Enable chat storage                         | `true`                                       | `WHATSAPP_CHAT_STORAGE=false`               |
-
-Note: Command-line flags will override any values set in environment variables or `.env` file.
-
-- For more command `./whatsapp --help`
-
-## Requirements
-
-### System Requirements
-
-- **Go 1.24.0 or higher** (for building from source)
-- **FFmpeg** (for media processing)
-
-### Platform Support
-
-- Linux (x86_64, ARM64)
-- macOS (Intel, Apple Silicon)
-- Windows (x86_64) - WSL recommended
-
-### Dependencies (without docker)
-
-- Mac OS:
-  - `brew install ffmpeg`
-  - `export CGO_CFLAGS_ALLOW="-Xpreprocessor"`
-- Linux:
-  - `sudo apt update`
-  - `sudo apt install ffmpeg`
-- Windows (not recomended, prefer using [WSL](https://docs.microsoft.com/en-us/windows/wsl/install)):
-  - install ffmpeg, [download here](https://www.ffmpeg.org/download.html#build-windows)
-  - add to ffmpeg to [environment variable](https://www.google.com/search?q=windows+add+to+environment+path)
-
-## How to use
-
-### Basic
-
-1. Clone this repo: `git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice`
-2. Open the folder that was cloned via cmd/terminal.
-3. run `cd src`
-4. run `go run . rest` (for REST API mode)
-5. Open `http://localhost:3000`
-
-### Docker (you don't need to install in required)
-
-1. Clone this repo: `git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice`
-2. Open the folder that was cloned via cmd/terminal.
-3. run `docker-compose up -d --build`
-4. open `http://localhost:3000`
-
-### Build your own binary
-
-1. Clone this repo `git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice`
-2. Open the folder that was cloned via cmd/terminal.
-3. run `cd src`
-4. run
-    1. Linux & MacOS: `go build -o whatsapp`
-    2. Windows (CMD / PowerShell): `go build -o whatsapp.exe`
-5. run
-    1. Linux & MacOS: `./whatsapp rest` (for REST API mode)
-        1. run `./whatsapp --help` for more detail flags
-    2. Windows: `.\whatsapp.exe rest` (for REST API mode)
-        1. run `.\whatsapp.exe --help` for more detail flags
-6. open `http://localhost:3000` in browser
-
-### MCP Server (Model Context Protocol)
-
-This application can also run as an MCP server, allowing AI agents and tools to interact with WhatsApp through a
-standardized protocol.
-
-1. Clone this repo `git clone https://github.com/aldinokemal/go-whatsapp-web-multidevice`
-2. Open the folder that was cloned via cmd/terminal.
-3. run `cd src`
-4. run `go run . mcp` or build the binary and run `./whatsapp mcp`
-5. The MCP server will start on `http://localhost:8080` by default
-
-#### MCP Server Options
-
-- `--host localhost` - Set the host for MCP server (default: localhost)
-- `--port 8080` - Set the port for MCP server (default: 8080)
-
-#### Available MCP Tools
-
-The WhatsApp MCP server provides comprehensive tools for AI agents to interact with WhatsApp through a standardized protocol. Below is the complete list of available tools:
-
-##### **📱 Connection Management**
-
-- `whatsapp_connection_status` - Check whether the WhatsApp client is connected and logged in
-- `whatsapp_login_qr` - Initiate QR code based login flow with image output
-- `whatsapp_login_with_code` - Generate pairing code for multi-device login using phone number
-- `whatsapp_logout` - Sign out the current WhatsApp session
-- `whatsapp_reconnect` - Attempt to reconnect to WhatsApp using stored session
-
-##### **💬 Messaging & Communication**
-
-- `whatsapp_send_text` - Send text messages with reply and forwarding support
-- `whatsapp_send_contact` - Send contact cards with name and phone number
-- `whatsapp_send_link` - Send links with custom captions
-- `whatsapp_send_location` - Send location coordinates (latitude/longitude)
-- `whatsapp_send_image` - Send images with captions, compression, and view-once options
-- `whatsapp_send_sticker` - Send stickers with automatic WebP conversion (supports JPG/PNG/GIF)
-
-##### **📋 Chat & Contact Management**
-
-- `whatsapp_list_contacts` - Retrieve all contacts in your WhatsApp account
-- `whatsapp_list_chats` - Get recent chats with pagination and search filters
-- `whatsapp_get_chat_messages` - Fetch messages from specific chats with time/media filtering
-- `whatsapp_download_message_media` - Download images/videos from messages
-
-##### **👥 Group Management**
-
-- `whatsapp_group_create` - Create new groups with optional initial participants
-- `whatsapp_group_join_via_link` - Join groups using invite links
-- `whatsapp_group_leave` - Leave groups by group ID
-- `whatsapp_group_participants` - List all participants in a group
-- `whatsapp_group_manage_participants` - Add, remove, promote, or demote group members
-- `whatsapp_group_invite_link` - Get or reset group invite links
-- `whatsapp_group_info` - Get detailed group information
-- `whatsapp_group_set_name` - Update group display name
-- `whatsapp_group_set_topic` - Update group description/topic
-- `whatsapp_group_set_locked` - Toggle admin-only group info editing
-- `whatsapp_group_set_announce` - Toggle announcement-only mode
-- `whatsapp_group_join_requests` - List pending join requests
-- `whatsapp_group_manage_join_requests` - Approve or reject join requests
-
-#### MCP Endpoints
-
-- SSE endpoint: `http://localhost:8080/sse`
-- Message endpoint: `http://localhost:8080/message`
-
-### MCP Configuration
-
-Make sure you have the MCP server running: `./whatsapp mcp`
-
-For AI tools that support MCP with SSE (like Cursor), add this configuration:
-
-```json
+#### Account Management
+```bash
+# Buat account baru
+POST /accounts
 {
-  "mcpServers": {
-    "whatsapp": {
-      "url": "http://localhost:8080/sse"
-    }
-  }
+  "account_id": "account1"
 }
+
+# List semua accounts
+GET /accounts
+
+# Get detail account
+GET /accounts/{accountId}
+
+# Delete account
+DELETE /accounts/{accountId}
+
+# Login account (QR code)
+POST /accounts/{accountId}/login
+
+# Login dengan phone number (pairing code)
+POST /accounts/{accountId}/login-with-code
+{
+  "phone_number": "6281234567890"
+}
+
+# Logout account
+POST /accounts/{accountId}/logout
+
+# Reconnect account
+POST /accounts/{accountId}/reconnect
 ```
 
-### Production Mode REST (docker)
+#### Webhook Management
+```bash
+# Set webhook untuk account
+POST /accounts/{accountId}/webhook
+{
+  "webhook_url": "https://yourdomain.com/webhook",
+  "secret": "your-secret-key"
+}
 
-Using Docker Hub:
+# Get webhook account
+GET /accounts/{accountId}/webhook
+```
+
+### 4. **Modifikasi Send API**
+
+Semua endpoint send sekarang memerlukan `account_id` dalam request body:
 
 ```bash
-docker run --detach --publish=3000:3000 --name=whatsapp --restart=always --volume=$(docker volume create --name=whatsapp):/app/storages aldinokemal2104/go-whatsapp-web-multidevice rest --autoreply="Dont't reply this message please"
+# Send message
+POST /send/message
+{
+  "account_id": "account1",
+  "phone": "6281234567890",
+  "message": "Hello from account1"
+}
+
+# Send image
+POST /send/image
+{
+  "account_id": "account1",
+  "phone": "6281234567890",
+  "caption": "Image from account1"
+}
+
+# Dan seterusnya untuk semua endpoint send...
 ```
 
-Using GitHub Container Registry:
+## Cara Penggunaan
+
+### 1. **Setup Multi-Account**
 
 ```bash
-docker run --detach --publish=3000:3000 --name=whatsapp --restart=always --volume=$(docker volume create --name=whatsapp):/app/storages ghcr.io/aldinokemal/go-whatsapp-web-multidevice rest --autoreply="Dont't reply this message please"
+# 1. Buat account pertama
+curl -X POST http://localhost:3000/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"account_id": "whatsapp_bisnis"}'
+
+# 2. Buat account kedua
+curl -X POST http://localhost:3000/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"account_id": "whatsapp_personal"}'
+
+# 3. Setup webhook untuk account bisnis
+curl -X POST http://localhost:3000/accounts/whatsapp_bisnis/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "https://yourbusiness.com/webhook",
+    "secret": "business-secret"
+  }'
+
+# 4. Setup webhook untuk account personal
+curl -X POST http://localhost:3000/accounts/whatsapp_personal/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_url": "https://yourpersonal.com/webhook",
+    "secret": "personal-secret"
+  }'
 ```
 
-### Production Mode REST (docker compose)
+### 2. **Login Accounts**
 
-create `docker-compose.yml` file with the following configuration:
+```bash
+# Login account bisnis dengan QR
+curl -X POST http://localhost:3000/accounts/whatsapp_bisnis/login
 
-Using Docker Hub:
-
-```yml
-services:
-  whatsapp:
-    image: aldinokemal2104/go-whatsapp-web-multidevice
-    container_name: whatsapp
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - whatsapp:/app/storages
-    command:
-      - rest
-      - --basic-auth=admin:admin
-      - --port=3000
-      - --debug=true
-      - --os=Chrome
-      - --account-validation=false
-
-volumes:
-  whatsapp:
+# Login account personal dengan phone number
+curl -X POST http://localhost:3000/accounts/whatsapp_personal/login-with-code \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number": "6281234567890"}'
 ```
 
-Using GitHub Container Registry:
+### 3. **Send Messages**
 
-```yml
-services:
-  whatsapp:
-    image: ghcr.io/aldinokemal/go-whatsapp-web-multidevice
-    container_name: whatsapp
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - whatsapp:/app/storages
-    command:
-      - rest
-      - --basic-auth=admin:admin
-      - --port=3000
-      - --debug=true
-      - --os=Chrome
-      - --account-validation=false
+```bash
+# Send dari account bisnis
+curl -X POST http://localhost:3000/send/message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "whatsapp_bisnis",
+    "phone": "6281234567890",
+    "message": "Hello from Business Account"
+  }'
 
-volumes:
-  whatsapp:
+# Send dari account personal
+curl -X POST http://localhost:3000/send/message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "whatsapp_personal",
+    "phone": "6281234567890",
+    "message": "Hello from Personal Account"
+  }'
 ```
 
-or with env file (Docker Hub):
+## Database Structure
 
-```yml
-services:
-  whatsapp:
-    image: aldinokemal2104/go-whatsapp-web-multidevice
-    container_name: whatsapp
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - whatsapp:/app/storages
-    environment:
-      - APP_BASIC_AUTH=admin:admin
-      - APP_PORT=3000
-      - APP_DEBUG=true
-      - APP_OS=Chrome
-      - APP_ACCOUNT_VALIDATION=false
-
-volumes:
-  whatsapp:
+### Accounts Table
+```sql
+CREATE TABLE accounts (
+    id TEXT PRIMARY KEY,
+    status TEXT DEFAULT 'disconnected',
+    phone_number TEXT DEFAULT '',
+    device_id TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_connected DATETIME
+);
 ```
 
-or with env file (GitHub Container Registry):
-
-```yml
-services:
-  whatsapp:
-    image: ghcr.io/aldinokemal/go-whatsapp-web-multidevice
-    container_name: whatsapp
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - whatsapp:/app/storages
-    environment:
-      - APP_BASIC_AUTH=admin:admin
-      - APP_PORT=3000
-      - APP_DEBUG=true
-      - APP_OS=Chrome
-      - APP_ACCOUNT_VALIDATION=false
-
-volumes:
-  whatsapp:
+### Account Webhooks Table
+```sql
+CREATE TABLE account_webhooks (
+    account_id TEXT PRIMARY KEY,
+    webhook_url TEXT DEFAULT '',
+    webhook_secret TEXT DEFAULT '',
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
 ```
 
-### Production Mode (binary)
+## File Structure Changes
 
-- download binary from [release](https://github.com/aldinokemal/go-whatsapp-web-multidevice/releases)
+### Komponen Baru:
+- `src/domains/account/` - Domain logic untuk account management
+- `src/infrastructure/account/` - Account repository dan manager
+- `src/usecase/account.go` - Business logic untuk account operations
+- `src/ui/rest/account.go` - REST API endpoints untuk account
+- `src/infrastructure/whatsapp/account_helper.go` - Helper functions
 
-You can fork or edit this source code !
+### Komponen Yang Dimodifikasi:
+- `src/domains/send/base.go` - Tambah AccountID ke BaseRequest
+- `src/usecase/send.go` - Gunakan client dari account manager
+- `src/infrastructure/whatsapp/webhook.go` - Support webhook per account
+- `src/cmd/root.go` - Initialize account services
+- `src/cmd/rest.go` - Register account endpoints
 
-## Current API
+## Benefits
 
-### MCP (Model Context Protocol) API
+1. **Isolasi Account**: Setiap WhatsApp account bekerja independen
+2. **Webhook Flexibility**: Setiap account bisa punya webhook berbeda
+3. **Scalability**: Mudah menambah account baru tanpa restart
+4. **Backward Compatibility**: API lama tetap berfungsi (dengan tambahan account_id)
+5. **Resource Efficiency**: Sharing infrastruktur tapi data terpisah
 
-- MCP server provides standardized tools for AI agents to interact with WhatsApp
-- Supports Server-Sent Events (SSE) transport
-- Available tools: `whatsapp_send_text`, `whatsapp_send_contact`, `whatsapp_send_link`, `whatsapp_send_location`
-- Compatible with MCP-enabled AI tools and agents
+## Resource Requirements & Capacity Planning
 
-### HTTP REST API
+### Estimasi Resource Per Account
 
-- [API Specification Document](https://bump.sh/aldinokemal/doc/go-whatsapp-web-multidevice).
-- Check [docs/openapi.yml](./docs/openapi.yaml) for detailed API specifications.
-- Use [SwaggerEditor](https://editor.swagger.io) to visualize the API.
-- Generate HTTP clients using [openapi-generator](https://openapi-generator.tech/#try).
+#### Memory Usage:
+- **Per Account**: ~50-100 MB RAM untuk setiap WhatsApp client aktif
+- **Base Application**: ~100-200 MB untuk aplikasi inti
+- **Example**: 10 accounts = ~700MB - 1.2GB total RAM
 
-| Feature | Menu                                   | Method | URL                                 |
-|---------|----------------------------------------|--------|-------------------------------------|
-| ✅       | Login with Scan QR                     | GET    | /app/login                          |
-| ✅       | Login With Pair Code                   | GET    | /app/login-with-code                |
-| ✅       | Logout                                 | GET    | /app/logout                         |  
-| ✅       | Reconnect                              | GET    | /app/reconnect                      |
-| ✅       | Devices                                | GET    | /app/devices                        |
-| ✅       | User Info                              | GET    | /user/info                          |
-| ✅       | User Avatar                            | GET    | /user/avatar                        |
-| ✅       | User Change Avatar                     | POST   | /user/avatar                        |
-| ✅       | User Change PushName                   | POST   | /user/pushname                      |
-| ✅       | User My Groups                         | GET    | /user/my/groups                     |
-| ✅       | User My Newsletter                     | GET    | /user/my/newsletters                |
-| ✅       | User My Privacy Setting                | GET    | /user/my/privacy                    |
-| ✅       | User My Contacts                       | GET    | /user/my/contacts                   |
-| ✅       | User Check                             | GET    | /user/check                         |
-| ✅       | User Business Profile                  | GET    | /user/business-profile              |
-| ✅       | Send Message                           | POST   | /send/message                       |
-| ✅       | Send Image                             | POST   | /send/image                         |
-| ✅       | Send Audio                             | POST   | /send/audio                         |
-| ✅       | Send File                              | POST   | /send/file                          |
-| ✅       | Send Video                             | POST   | /send/video                         |
-| ✅       | Send Sticker                           | POST   | /send/sticker                       |
-| ✅       | Send Contact                           | POST   | /send/contact                       |
-| ✅       | Send Link                              | POST   | /send/link                          |
-| ✅       | Send Location                          | POST   | /send/location                      |
-| ✅       | Send Poll / Vote                       | POST   | /send/poll                          |
-| ✅       | Send Presence                          | POST   | /send/presence                      |
-| ✅       | Send Chat Presence (Typing Indicator)  | POST   | /send/chat-presence                 |
-| ✅       | Revoke Message                         | POST   | /message/:message_id/revoke         |
-| ✅       | React Message                          | POST   | /message/:message_id/reaction       |
-| ✅       | Delete Message                         | POST   | /message/:message_id/delete         |
-| ✅       | Edit Message                           | POST   | /message/:message_id/update         |
-| ✅       | Read Message (DM)                      | POST   | /message/:message_id/read           |
-| ✅       | Star Message                           | POST   | /message/:message_id/star           |
-| ✅       | Unstar Message                         | POST   | /message/:message_id/unstar         |
-| ✅       | Join Group With Link                   | POST   | /group/join-with-link               |
-| ✅       | Group Info From Link                   | GET    | /group/info-from-link               |
-| ✅       | Group Info                             | GET    | /group/info                         |
-| ✅       | Leave Group                            | POST   | /group/leave                        |
-| ✅       | Create Group                           | POST   | /group                              |
-| ✅       | List Participants in Group             | GET    | /group/participants                 |
-| ✅       | Add Participants in Group              | POST   | /group/participants                 |
-| ✅       | Remove Participant in Group            | POST   | /group/participants/remove          |
-| ✅       | Promote Participant in Group           | POST   | /group/participants/promote         |
-| ✅       | Demote Participant in Group            | POST   | /group/participants/demote          |
-| ✅       | Export Group Participants (CSV)        | GET    | /group/participants/export          |
-| ✅       | List Requested Participants in Group   | GET    | /group/participant-requests         |
-| ✅       | Approve Requested Participant in Group | POST   | /group/participant-requests/approve |
-| ✅       | Reject Requested Participant in Group  | POST   | /group/participant-requests/reject  |
-| ✅       | Set Group Photo                        | POST   | /group/photo                        |
-| ✅       | Set Group Name                         | POST   | /group/name                         |
-| ✅       | Set Group Locked                       | POST   | /group/locked                       |
-| ✅       | Set Group Announce                     | POST   | /group/announce                     |
-| ✅       | Set Group Topic                        | POST   | /group/topic                        |
-| ✅       | Get Group Invite Link                  | GET    | /group/invite-link                  |
-| ✅       | Unfollow Newsletter                    | POST   | /newsletter/unfollow                |
-| ✅       | Get Chat List                          | GET    | /chats                              |
-| ✅       | Get Chat Messages                      | GET    | /chat/:chat_jid/messages            |
-| ✅       | Label Chat                             | POST   | /chat/:chat_jid/label               |
-| ✅       | Pin Chat                               | POST   | /chat/:chat_jid/pin                 |
+#### Storage Requirements:
+- **Database per Account**: ~10-50 MB per account (tergantung history chat)
+- **Media Storage**: Bervariasi tergantung penggunaan media
+- **QR Code Files**: ~5-10 KB per login attempt
+- **Example**: 10 accounts = ~100-500 MB database storage
 
-```txt
-✅ = Available
-❌ = Not Available Yet
-```
+#### CPU Usage:
+- **Per Account**: Minimal saat idle, meningkat saat ada aktivitas tinggi
+- **Concurrent Connections**: Linear scaling dengan jumlah account aktif
+- **Example**: 10 accounts dapat berjalan di 2-4 CPU cores
 
-## User Interface
+### Estimasi Kapasitas Berdasarkan Hardware
 
-### MCP UI
+#### Server Kecil (2GB RAM, 2 CPU cores):
+- **Recommended**: 5-10 accounts
+- **Maximum**: 15-20 accounts (dengan optimasi)
 
-- Setup MCP (tested in cursor)
-  ![Setup MCP](https://i.ibb.co/vCg4zNWt/mcpsetup.png)
-- Test MCP
-  ![Test MCP](https://i.ibb.co/B2LX38DW/mcptest.png)
-- Successfully setup MCP
-  ![Success MCP](https://i.ibb.co/1fCx0Myc/mcpsuccess.png)
+#### Server Medium (4GB RAM, 4 CPU cores):
+- **Recommended**: 20-30 accounts
+- **Maximum**: 40-50 accounts
 
-### HTTP REST API UI
+#### Server Besar (8GB RAM, 8 CPU cores):
+- **Recommended**: 50-80 accounts
+- **Maximum**: 100+ accounts
 
-| Description          | Image                                                         |
-|----------------------|---------------------------------------------------------------|
-| Homepage             | ![Homepage](./gallery/homepage.png)                           |
-| Login                | ![Login](./gallery/login.png)                                 |
-| Login With Code      | ![Login With Code](./gallery/login-with-code.png)             |
-| Send Message         | ![Send Message](./gallery/send-message.png)                   |
-| Send Image           | ![Send Image](./gallery/send-image.png)                       |
-| Send File            | ![Send File](./gallery/send-file.png)                         |
-| Send Video           | ![Send Video](./gallery/send-video.png)                       |
-| Send Sticker         | ![Send Sticker](./gallery/send-sticker.png)                   |
-| Send Contact         | ![Send Contact](./gallery/send-contact.png)                   |
-| Send Location        | ![Send Location](./gallery/send-location.png)                 |
-| Send Audio           | ![Send Audio](./gallery/send-audio.png)                       |
-| Send Poll            | ![Send Poll](./gallery/send-poll.png)                         |
-| Send Presence        | ![Send Presence](./gallery/send-presence.png)                 |
-| Send Link            | ![Send Link](./gallery/send-link.png)                         |
-| My Group             | ![My Group](./gallery/group-list.png)                         |
-| Group Info From Link | ![Group Info From Link](./gallery/group-info-from-link.png)   |
-| Create Group         | ![Create Group](./gallery/group-create.png)                   |
-| Join Group with Link | ![Join Group with Link](./gallery/group-join-link.png)        |
-| Manage Participant   | ![Manage Participant](./gallery/group-manage-participant.png) |
-| My Newsletter        | ![My Newsletter](./gallery/newsletter-list.png)               |
-| My Contacts          | ![My Contacts](./gallery/contact-list.png)                    |
-| Business Profile     | ![Business Profile](./gallery/business-profile.png)           |
+### Monitoring & Optimization Tips
 
-### Mac OS NOTE
+1. **Memory Monitoring**:
+   ```bash
+   # Monitor memory usage
+   docker stats
+   ```
 
-- Please do this if you have an error (invalid flag in pkg-config --cflags: -Xpreprocessor)
-  `export CGO_CFLAGS_ALLOW="-Xpreprocessor"`
+2. **Database Size Monitoring**:
+   ```bash
+   # Check database sizes
+   du -sh storages/whatsapp_*.db
+   ```
 
-## Important
+3. **Connection Health Check**:
+   ```bash
+   # Check account status
+   curl http://localhost:3000/accounts
+   ```
 
-- This project is unofficial and not affiliated with WhatsApp.
-- Please use official WhatsApp API to avoid any issues.
-- We only able to run MCP or REST API, this is limitation from whatsmeow library. independent MCP will be available in
-  the future.
+4. **Optimization Strategies**:
+   - Gunakan database cleanup untuk old messages
+   - Implement connection pooling untuk inactive accounts
+   - Monitor dan restart accounts yang sering disconnect
+
+## Limitations
+
+- Setiap account tetap memerlukan QR scan atau pairing code terpisah
+- Database file terpisah per account (storage requirement meningkat)
+- Memory usage meningkat karena multiple clients
+- WhatsApp rate limiting berlaku per account
+- Maksimal 4 devices per WhatsApp number (termasuk phone)
+
+## Migration dari Single Account
+
+Jika Anda memiliki implementasi single account sebelumnya:
+
+1. Buat account dengan ID "default": `POST /accounts {"account_id": "default"}`
+2. Login account default
+3. Update semua API calls untuk menambahkan `"account_id": "default"`
+4. Pindahkan webhook configuration ke account level jika diperlukan

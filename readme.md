@@ -2,7 +2,7 @@
 
 ## Overview
 
-Proyek ini telah dimodifikasi untuk mendukung multiple WhatsApp accounts dengan webhook per account yang dapat dikonfigurasi secara terpisah.
+Proyek ini merupakan fork dari [GOWA by aldionokemal](https://github.com/aldinokemal/go-whatsapp-web-multidevice) untuk mendukung multiple WhatsApp accounts dengan webhook per account (API only) yang dapat dikonfigurasi secara terpisah.
 
 ## Fitur Multi-Account
 

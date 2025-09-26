@@ -648,11 +648,35 @@ func handleWebhookForward(ctx context.Context, evt *events.Message) {
 		}
 	}
 
-	if len(config.WhatsappWebhook) > 0 &&
-		!strings.Contains(evt.Info.SourceString(), "broadcast") {
+	// Skip broadcast messages
+	if strings.Contains(evt.Info.SourceString(), "broadcast") {
+		return
+	}
+
+	// First try to send to account-specific webhook
+	accountID := GetAccountIDFromClient(cli)
+	if accountID != "" {
+		accountRepo := GetAccountRepoFromGlobalVars()
+		if accountRepo != nil {
+			go func(evt *events.Message) {
+				payload, err := createMessagePayload(ctx, evt)
+				if err != nil {
+					logrus.Error("Failed to create message payload: ", err)
+					return
+				}
+
+				if err := submitWebhookForAccount(ctx, payload, accountID, accountRepo); err != nil {
+					logrus.Error("Failed forward to account webhook: ", err)
+				}
+			}(evt)
+		}
+	}
+
+	// Fallback to global webhook for backward compatibility
+	if len(config.WhatsappWebhook) > 0 {
 		go func(evt *events.Message) {
 			if err := forwardMessageToWebhook(ctx, evt); err != nil {
-				logrus.Error("Failed forward to webhook: ", err)
+				logrus.Error("Failed forward to global webhook: ", err)
 			}
 		}(evt)
 	}

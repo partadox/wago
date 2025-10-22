@@ -10,6 +10,6 @@ services:
       dockerfile: ./docker/golang.Dockerfile
     restart: "on-failure"
     ports:
-      - "3003:3000"
+      - "3004:3000"
     env_file:
       - src/.env

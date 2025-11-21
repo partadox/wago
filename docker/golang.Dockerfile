@@ -6,12 +6,20 @@ RUN apk update && apk add --no-cache gcc musl-dev gcompat
 WORKDIR /whatsapp
 COPY ./src .
 
-# Fetch dependencies.
+# Show Go version
+RUN go version
+
+# Fetch dependencies
 RUN go mod download
-# Verify go.mod and show version
-RUN go version && go mod verify || true
-# Build the binary with optimizations (show errors)
-RUN go build -v -a -ldflags="-w -s" -o /app/whatsapp 2>&1 | tee /tmp/build.log || (cat /tmp/build.log && exit 1)
+
+# Verify dependencies
+RUN go mod verify
+
+# Build the binary with verbose output (NO optimization flags to see errors clearly)
+RUN set -x && go build -v -o /app/whatsapp
+
+# Verify binary was created
+RUN ls -lh /app/whatsapp
 
 #############################
 ## STEP 2 build a smaller image

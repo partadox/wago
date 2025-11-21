@@ -8,8 +8,10 @@ COPY ./src .
 
 # Fetch dependencies.
 RUN go mod download
-# Build the binary with optimizations
-RUN go build -a -ldflags="-w -s" -o /app/whatsapp
+# Verify go.mod and show version
+RUN go version && go mod verify || true
+# Build the binary with optimizations (show errors)
+RUN go build -v -a -ldflags="-w -s" -o /app/whatsapp 2>&1 | tee /tmp/build.log || (cat /tmp/build.log && exit 1)
 
 #############################
 ## STEP 2 build a smaller image

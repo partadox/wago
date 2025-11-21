@@ -1,5 +1,5 @@
 services:
-  whatsapp_go:
+  wagoaais:
     logging:
       driver: "json-file"
       options:

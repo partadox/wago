@@ -1,40 +1,27 @@
-############################
-# STEP 1: BUILDER (Gunakan Debian base, bukan Alpine)
-############################
-FROM golang:1.24 AS builder
+# Gunakan image Golang lengkap (Debian based) bukan Alpine
+# Ini lebih stabil dan tidak perlu install compiler C manual
+FROM golang:1.24
 
+# Set folder kerja
 WORKDIR /app
 
-# Copy source code
+# Copy source code dari folder src lokal ke dalam container
 COPY ./src .
 
-# Download dependencies
+# Download library
 RUN go mod download
 
 # Setup Environment
-# CGO_ENABLED=1 wajib untuk SQLite
+# Kita tetap butuh CGO untuk SQLite
 ENV CGO_ENABLED=1
 ENV GOOS=linux
 
-# Build command
-# Gunakan -p 1 untuk hemat RAM
-# Hapus flag -s -w sementara untuk melihat jika ada error detail
-RUN go build -p 1 -v -o wagoaais .
+# Build paling standar (tanpa flag aneh-aneh)
+# Kita build langsung file main di root
+RUN go build -o wagoaais .
 
-#############################
-## STEP 2: RUNNER (Tetap Alpine supaya kecil)
-#############################
-FROM alpine:3.20
+# Buka port (dokumentasi saja)
+EXPOSE 3000
 
-# Install dependencies runtime
-RUN apk add --no-cache ffmpeg tzdata ca-certificates
-
-ENV TZ=UTC
-WORKDIR /app
-
-# Copy hasil build dari stage builder
-COPY --from=builder /app/wagoaais /app/wagoaais
-
-# Run
-ENTRYPOINT ["/app/wagoaais"]
-CMD [ "rest" ]
+# Jalankan aplikasi langsung
+CMD ["./wagoaais", "rest"]

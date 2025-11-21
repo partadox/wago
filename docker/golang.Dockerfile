@@ -1,40 +1,26 @@
 ############################
-# STEP 1: BUILDER (Gunakan Debian base, bukan Alpine)
+# STEP 1 build executable binary
 ############################
-FROM golang:1.24 AS builder
-
-WORKDIR /app
-
-# Copy source code
+FROM golang:1.24-alpine3.20 AS builder
+RUN apk update && apk add --no-cache gcc musl-dev gcompat
+WORKDIR /whatsapp
 COPY ./src .
 
-# Download dependencies
+# Fetch dependencies.
 RUN go mod download
-
-# Setup Environment
-# CGO_ENABLED=1 wajib untuk SQLite
-ENV CGO_ENABLED=1
-ENV GOOS=linux
-
-# Build command
-# Gunakan -p 1 untuk hemat RAM
-# Hapus flag -s -w sementara untuk melihat jika ada error detail
-RUN go build -p 1 -v -o wagoaais .
+# Build the binary with optimizations
+RUN go build -a -ldflags="-w -s" -o /app/whatsapp
 
 #############################
-## STEP 2: RUNNER (Tetap Alpine supaya kecil)
+## STEP 2 build a smaller image
 #############################
 FROM alpine:3.20
-
-# Install dependencies runtime
-RUN apk add --no-cache ffmpeg tzdata ca-certificates
-
+RUN apk add --no-cache ffmpeg tzdata
 ENV TZ=UTC
 WORKDIR /app
+# Copy compiled from builder.
+COPY --from=builder /app/whatsapp /app/whatsapp
+# Run the binary.
+ENTRYPOINT ["/app/whatsapp"]
 
-# Copy hasil build dari stage builder
-COPY --from=builder /app/wagoaais /app/wagoaais
-
-# Run
-ENTRYPOINT ["/app/wagoaais"]
 CMD [ "rest" ]

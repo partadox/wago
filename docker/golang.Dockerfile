@@ -1,42 +1,40 @@
 ############################
-# STEP 1 build executable binary
+# STEP 1: BUILDER (Gunakan Debian base, bukan Alpine)
 ############################
-FROM golang:1.24-alpine3.20 AS builder
-
-# Install build tools
-RUN apk add --no-cache build-base git
+FROM golang:1.24 AS builder
 
 WORKDIR /app
 
 # Copy source code
 COPY ./src .
 
-# 1. DEBUG: Tampilkan struktur file untuk memastikan main.go ada di root /app
-# Lihat log ini nanti di Coolify jika masih error
-RUN echo "=== FILE STRUCTURE ===" && ls -R /app && echo "======================"
-
 # Download dependencies
 RUN go mod download
 
-# Set Environment
+# Setup Environment
+# CGO_ENABLED=1 wajib untuk SQLite
 ENV CGO_ENABLED=1
 ENV GOOS=linux
 
-# 2. BUILD FIX:
-# Tambahkan "-p 1" untuk hemat RAM (Mencegah OOM Killer di VPS kecil)
-# Hapus "-a" jika ingin memanfaatkan cache build (opsional, tapi hemat resource)
-RUN go build -p 1 -v -ldflags="-w -s" -o wagoaais .
+# Build command
+# Gunakan -p 1 untuk hemat RAM
+# Hapus flag -s -w sementara untuk melihat jika ada error detail
+RUN go build -p 1 -v -o wagoaais .
 
 #############################
-## STEP 2 build a smaller image
+## STEP 2: RUNNER (Tetap Alpine supaya kecil)
 #############################
 FROM alpine:3.20
+
+# Install dependencies runtime
 RUN apk add --no-cache ffmpeg tzdata ca-certificates
 
 ENV TZ=UTC
 WORKDIR /app
 
+# Copy hasil build dari stage builder
 COPY --from=builder /app/wagoaais /app/wagoaais
 
+# Run
 ENTRYPOINT ["/app/wagoaais"]
 CMD [ "rest" ]

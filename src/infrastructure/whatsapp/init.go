@@ -182,14 +182,111 @@ func GetConnectionStatus() (isConnected bool, isLoggedIn bool, deviceID string) 
 	return isConnected, isLoggedIn, deviceID
 }
 
-// CleanupDatabase removes the database file to prevent foreign key constraint issues
+// CleanupDatabase removes the database file (SQLite) or deletes all devices (PostgreSQL) to prevent foreign key constraint issues
 func CleanupDatabase() error {
+	// Check if using PostgreSQL
+	if strings.HasPrefix(config.DBURI, "postgres:") {
+		logrus.Info("[CLEANUP] PostgreSQL detected - deleting all devices from database")
+
+		// Check if database is initialized
+		if db == nil {
+			logrus.Warn("[CLEANUP] Database is nil, skipping device deletion")
+			return nil
+		}
+
+		ctx := context.Background()
+
+		// Get all devices
+		devices, err := db.GetAllDevices(ctx)
+		if err != nil {
+			logrus.Errorf("[CLEANUP] Error getting devices: %v", err)
+			return fmt.Errorf("failed to get devices: %v", err)
+		}
+
+		logrus.Infof("[CLEANUP] Found %d devices to delete", len(devices))
+
+		// Delete each device (this will cascade delete related records like identity keys, sessions, etc.)
+		for _, device := range devices {
+			logrus.Infof("[CLEANUP] Deleting device: %s", device.ID)
+			if err := db.DeleteDevice(ctx, device); err != nil {
+				logrus.Errorf("[CLEANUP] Error deleting device %s: %v", device.ID, err)
+				return fmt.Errorf("failed to delete device %s: %v", device.ID, err)
+			}
+		}
+
+		// Also clean up keysDB if it exists and is separate
+		if keysDB != nil && keysDB != db {
+			keysDevices, err := keysDB.GetAllDevices(ctx)
+			if err != nil {
+				logrus.Errorf("[CLEANUP] Error getting devices from keysDB: %v", err)
+				return fmt.Errorf("failed to get devices from keysDB: %v", err)
+			}
+
+			logrus.Infof("[CLEANUP] Found %d devices in keysDB to delete", len(keysDevices))
+
+			for _, device := range keysDevices {
+				logrus.Infof("[CLEANUP] Deleting device from keysDB: %s", device.ID)
+				if err := keysDB.DeleteDevice(ctx, device); err != nil {
+					logrus.Errorf("[CLEANUP] Error deleting device %s from keysDB: %v", device.ID, err)
+					return fmt.Errorf("failed to delete device %s from keysDB: %v", device.ID, err)
+				}
+			}
+		}
+
+		logrus.Info("[CLEANUP] All devices deleted successfully from PostgreSQL")
+		return nil
+	}
+
+	// SQLite: Close database connections before removing the file
+	logrus.Info("[CLEANUP] SQLite detected - closing database connections before file removal")
+
+	// Close the main database connection
+	if db != nil {
+		logrus.Info("[CLEANUP] Closing main database connection")
+		if err := db.Close(); err != nil {
+			logrus.Errorf("[CLEANUP] Error closing main database: %v", err)
+			return fmt.Errorf("failed to close main database: %v", err)
+		}
+		logrus.Info("[CLEANUP] Main database connection closed successfully")
+	}
+
+	// Close keysDB if it exists and is separate from main db
+	if keysDB != nil && keysDB != db {
+		logrus.Info("[CLEANUP] Closing keysDB database connection")
+		if err := keysDB.Close(); err != nil {
+			logrus.Errorf("[CLEANUP] Error closing keysDB: %v", err)
+			return fmt.Errorf("failed to close keysDB: %v", err)
+		}
+		logrus.Info("[CLEANUP] KeysDB connection closed successfully")
+
+		// Remove keysDB file if it's also SQLite
+		if config.DBKeysURI != "" && strings.HasPrefix(config.DBKeysURI, "file:") {
+			keysDBPath := strings.TrimPrefix(config.DBKeysURI, "file:")
+			if strings.Contains(keysDBPath, "?") {
+				keysDBPath = strings.Split(keysDBPath, "?")[0]
+			}
+
+			logrus.Infof("[CLEANUP] Removing keysDB file: %s", keysDBPath)
+			if err := os.Remove(keysDBPath); err != nil {
+				if !os.IsNotExist(err) {
+					logrus.Errorf("[CLEANUP] Error removing keysDB file: %v", err)
+					return fmt.Errorf("failed to remove keysDB file: %v", err)
+				} else {
+					logrus.Info("[CLEANUP] KeysDB file already removed")
+				}
+			} else {
+				logrus.Info("[CLEANUP] KeysDB file removed successfully")
+			}
+		}
+	}
+
+	// Now remove the main database file
 	dbPath := strings.TrimPrefix(config.DBURI, "file:")
 	if strings.Contains(dbPath, "?") {
 		dbPath = strings.Split(dbPath, "?")[0]
 	}
 
-	logrus.Infof("[CLEANUP] Removing database file: %s", dbPath)
+	logrus.Infof("[CLEANUP] Removing main database file: %s", dbPath)
 	if err := os.Remove(dbPath); err != nil {
 		if !os.IsNotExist(err) {
 			logrus.Errorf("[CLEANUP] Error removing database file: %v", err)
@@ -409,7 +506,7 @@ func handleDeleteForMe(ctx context.Context, evt *events.DeleteForMe, chatStorage
 
 func handleAppStateSyncComplete(_ context.Context, evt *events.AppStateSyncComplete) {
 	if len(cli.Store.PushName) > 0 && evt.Name == appstate.WAPatchCriticalBlock {
-		if err := cli.SendPresence(types.PresenceAvailable); err != nil {
+		if err := cli.SendPresence(context.Background(), types.PresenceAvailable); err != nil {
 			log.Warnf("Failed to send available presence: %v", err)
 		} else {
 			log.Infof("Marked self as available")
@@ -446,7 +543,7 @@ func handleConnectionEvents(_ context.Context) {
 
 	// Send presence available when connecting and when the pushname is changed.
 	// This makes sure that outgoing messages always have the right pushname.
-	if err := cli.SendPresence(types.PresenceAvailable); err != nil {
+	if err := cli.SendPresence(context.Background(), types.PresenceAvailable); err != nil {
 		log.Warnf("Failed to send available presence: %v", err)
 	} else {
 		log.Infof("Marked self as available")
@@ -524,7 +621,7 @@ func handleAutoMarkRead(_ context.Context, evt *events.Message) {
 	chat := evt.Info.Chat
 	sender := evt.Info.Sender
 
-	if err := cli.MarkRead(messageIDs, timestamp, chat, sender); err != nil {
+	if err := cli.MarkRead(context.Background(), messageIDs, timestamp, chat, sender); err != nil {
 		log.Warnf("Failed to mark message %s as read: %v", evt.Info.ID, err)
 	} else {
 		log.Debugf("Marked message %s as read", evt.Info.ID)

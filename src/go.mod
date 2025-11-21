@@ -3,7 +3,7 @@ module github.com/aldinokemal/go-whatsapp-web-multidevice
 go 1.24.0
 
 require (
-	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
@@ -12,18 +12,18 @@ require (
 	github.com/gofiber/websocket/v2 v2.2.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
-	github.com/mark3labs/mcp-go v0.40.0
+	github.com/mark3labs/mcp-go v0.43.0
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/sirupsen/logrus v1.9.3
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	github.com/valyala/fasthttp v1.66.0
-	go.mau.fi/libsignal v0.2.0
-	go.mau.fi/whatsmeow v0.0.0-20250919124702-c8bdfd36d05e
-	golang.org/x/image v0.31.0
-	google.golang.org/protobuf v1.36.9
+	github.com/valyala/fasthttp v1.68.0
+	go.mau.fi/libsignal v0.2.1
+	go.mau.fi/whatsmeow v0.0.0-20251116104239-3aca43070cd4
+	golang.org/x/image v0.33.0
+	google.golang.org/protobuf v1.36.10
 )
 
 require (

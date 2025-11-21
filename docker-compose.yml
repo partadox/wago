@@ -9,7 +9,12 @@ services:
       context: .
       dockerfile: ./docker/golang.Dockerfile
     restart: "on-failure"
+    volumes:
+      - whatsapp:/app/storages
     ports:
       - "3005:3000"
     env_file:
       - src/.env
+
+volumes:
+  whatsapp:

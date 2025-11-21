@@ -1,26 +1,27 @@
-############################
-# STEP 1 build executable binary
-############################
-FROM golang:1.24-alpine3.20 AS builder
-RUN apk update && apk add --no-cache gcc musl-dev gcompat
-WORKDIR /whatsapp
+# Ganti ke versi 1.23 yang sudah pasti stabil
+FROM golang:1.23
+
+WORKDIR /app
+
+# Copy source
 COPY ./src .
 
-# Fetch dependencies.
+# DEBUG 1: Tampilkan isi folder dan isi go.mod di log
+# Supaya kita tahu file-nya benar-benar ada
+RUN echo "=== LIST FILES ===" && ls -R && echo "=== CONTENT GO.MOD ===" && cat go.mod
+
+# Download modules
 RUN go mod download
-# Build the binary with optimizations
-RUN go build -a -ldflags="-w -s" -o /app/whatsapp
 
-#############################
-## STEP 2 build a smaller image
-#############################
-FROM alpine:3.20
-RUN apk add --no-cache ffmpeg tzdata
-ENV TZ=UTC
-WORKDIR /app
-# Copy compiled from builder.
-COPY --from=builder /app/whatsapp /app/whatsapp
-# Run the binary.
-ENTRYPOINT ["/app/whatsapp"]
+# DEBUG 2: Coba build TANPA CGO (Pure Go).
+# Jika ini BERHASIL, berarti masalah Anda adalah library SQLite/CGO yang berat.
+# Jika ini GAGAL, berarti masalah struktur folder/code.
+ENV CGO_ENABLED=0
+ENV GOOS=linux
 
-CMD [ "rest" ]
+# Kita pakai flag -x untuk melihat detail step compiler
+RUN go build -x -o wagoaais .
+
+EXPOSE 3000
+
+CMD ["./wagoaais", "rest"]

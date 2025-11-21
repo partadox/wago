@@ -108,10 +108,9 @@ func InitWaCLI(ctx context.Context, storeContainer, keysStoreContainer *sqlstore
 		panic(err)
 	}
 
-	// Create new device if none exists (for new accounts that haven't paired yet)
 	if device == nil {
-		device = storeContainer.NewDevice()
-		log.Infof("Created new device for pairing")
+		log.Errorf("No device found")
+		panic("No device found")
 	}
 
 	// Configure device properties

@@ -1,5 +1,4 @@
-# Ganti ke versi 1.23 yang sudah pasti stabil
-FROM golang:1.23
+FROM golang:1.24-alpine3.20 AS builder
 
 WORKDIR /app
 
